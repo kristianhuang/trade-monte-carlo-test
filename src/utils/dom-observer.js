@@ -41,7 +41,7 @@ export class DomObserver {
      * 注销所有 DOM 监听
      */
     destroy(){
-        if (this.resizeObserver) {
+        if (this.resizeObserver && this.element) {
             this.resizeObserver.unobserve(this.element);
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
