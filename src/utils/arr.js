@@ -51,29 +51,6 @@ export default {
     },
 
     /**
-     * 防抖
-     * @param func
-     * @param wait
-     * @param immediate
-     * @returns {(function(...[*]): void)|*}
-     */
-    debounce(func, wait, immediate = false) {
-        let timer = null;
-        let isInvoked = false;
-        return (...args) => {
-            if (timer) clearTimeout(timer);
-            if (immediate && !isInvoked) {
-                func.apply(this)
-                isInvoked = true;
-            } else {
-                timer = setTimeout(() => {
-                    func.apply(this, args);
-                }, wait);
-            }
-        }
-    },
-
-    /**
      * 获取数组中最大值
      * @param {Array} arr
      * @returns {*|number}

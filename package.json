@@ -1,5 +1,5 @@
 {
-  "name": "my-vue-app",
+  "name": "trade-monte-carlo-test",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -17,7 +17,7 @@
     "naive-ui": "^2.44.1",
     "path": "^0.12.7",
     "resize-observer": "^1.0.4",
-    "vite": "^8.0.1",
+    "vite": "^8.0.4",
     "xlsx": "^0.18.5"
   }
 }

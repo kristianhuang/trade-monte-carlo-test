@@ -1,20 +1,28 @@
 <template>
   <n-layout>
-    <DataForm :conf="conf" :has-act-data="hasActData" @on-submit="createStats" @on-upload-data="createActData"/>
-    <DataTable :stats-data="statsData" :max-drawdown-val="mockData.maxDrawdownVal"
-               :init-capital="conf.initCapital"/>
-    <LineChart :profit-group-line="mockData.profitGroupItemLine"/>
-    <ScatterChart :profit-group-item-total="mockData.profitGroupItemTotal"/>
+    <DataForm
+      :conf="conf"
+      :has-act-data="hasActData"
+      @on-submit="createStats"
+      @on-upload-data="createActData"
+    />
+    <DataTable
+      :stats-data="statsData"
+      :max-drawdown-val="mockData.maxDrawdownVal"
+      :init-capital="conf.initCapital"
+    />
+    <LineChart :profit-group-line="mockData.profitGroupItemLine" />
+    <ScatterChart :profit-group-item-total="mockData.profitGroupItemTotal" />
   </n-layout>
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import { computed, onMounted, ref } from "vue";
 import arrUtil from "@/utils/arr.js";
 import LineChart from "./components/LineChart.vue";
 import DataForm from "./components/DataForm.vue";
 import DataTable from "./components/DataTable.vue";
-import {NLayout} from "naive-ui";
+import { NLayout } from "naive-ui";
 import ScatterChart from "@/pages/components/ScatterChart.vue";
 
 onMounted(() => {
@@ -31,21 +39,21 @@ const conf = ref({
 
 const confHandle = {
   changeConf(data) {
-    conf.value = {...conf.value, ...data}
-    this.initConf()
+    conf.value = { ...conf.value, ...data };
+    this.initConf();
   },
   initConf() {
     conf.value.ruinVal = (
-        (conf.value.initCapital * conf.value.ruinThreshold) /
-        100
+      (conf.value.initCapital * conf.value.ruinThreshold) /
+      100
     ).toFixed(2);
-  }
-}
+  },
+};
 
 const actData = ref([]);
 const hasActData = computed(() => {
   return actData.value.length > 0;
-})
+});
 
 const mockData = ref({
   profitGroupList: [], // 收益结果组
@@ -70,16 +78,20 @@ const mockDataHandle = {
       for (let ii = 0; ii < actData.value.length; ii++) {
         // 基于真实数据，随机抓元素填充进模拟数据
         mockData.value.profitGroupList[i].push(
-            arrUtil.getRandomItem(actData.value),
+          arrUtil.getRandomItem(actData.value),
         );
       }
     }
   },
 
   reset() {
-    mockData.value.profitGroupItemTotal = new Array(conf.value.groupNum).fill(0);
+    mockData.value.profitGroupItemTotal = new Array(conf.value.groupNum).fill(
+      0,
+    );
     mockData.value.maxDrawdownsList = new Array(conf.value.groupNum).fill(0);
-    mockData.value.profitGroupItemLine = new Array(conf.value.groupNum).fill([]);
+    mockData.value.profitGroupItemLine = new Array(conf.value.groupNum).fill(
+      [],
+    );
     mockData.value.profitGroupList = [];
     mockData.value.count = 0;
     mockData.value.lossCount = 0;
@@ -120,8 +132,8 @@ const statsDataHandle = {
   _computedRuin() {
     statsData.value.ruinTotal += 1;
     statsData.value.ruinPCT = (
-        (statsData.value.ruinTotal / conf.value.groupNum) *
-        100
+      (statsData.value.ruinTotal / conf.value.groupNum) *
+      100
     ).toFixed(2);
   },
 
@@ -131,12 +143,15 @@ const statsDataHandle = {
   _computedRR() {
     const winCount = mockData.value.count - mockData.value.lossCount;
     // 亏损总金额先转正数
-    const absLossProfitTotal = Math.abs(mockData.value.lossProfitTotal)
+    const absLossProfitTotal = Math.abs(mockData.value.lossProfitTotal);
     const lossAvgProfit = (
-        (absLossProfitTotal / mockData.value.lossCount) *
-        100
+      (absLossProfitTotal / mockData.value.lossCount) *
+      100
     ).toFixed(2);
-    const winAvgProfit = ((mockData.value.winProfitTotal / winCount) * 100).toFixed(2);
+    const winAvgProfit = (
+      (mockData.value.winProfitTotal / winCount) *
+      100
+    ).toFixed(2);
 
     statsData.value.RR = (winAvgProfit / lossAvgProfit).toFixed(2);
   },
@@ -145,13 +160,14 @@ const statsDataHandle = {
    * @returns
    */
   _computedAvgProfit() {
-    statsData.value.avgProfitVal = (
-        // 执行策略后所有账户总资金/参与总人数 = 平均账户金额
+    statsData.value.avgProfitVal =
+      // 执行策略后所有账户总资金/参与总人数 = 平均账户金额
+      (
         mockData.value.allProfitTotal / mockData.value.profitGroupList.length
-    ).toFixed(2);
+      ).toFixed(2);
     statsData.value.avgProfitPCT = (
-        (statsData.value.avgProfitVal / conf.value.initCapital) *
-        100
+      (statsData.value.avgProfitVal / conf.value.initCapital) *
+      100
     ).toFixed(2);
   },
 
@@ -162,13 +178,15 @@ const statsDataHandle = {
     const midVal = arrUtil.getMidVal(mockData.value.profitGroupItemTotal);
     statsData.value.midProfitVal = midVal;
     statsData.value.midProfitPCT = (
-        (midVal / conf.value.initCapital) *
-        100
+      (midVal / conf.value.initCapital) *
+      100
     ).toFixed(2);
   },
 
   _computedAvgContinuousLossVal() {
-    statsData.value.avgContinuousLossVal = (mockData.value.continuousLossTotal / mockData.value.continuousLossCount).toFixed(2)
+    statsData.value.avgContinuousLossVal = (
+      mockData.value.continuousLossTotal / mockData.value.continuousLossCount
+    ).toFixed(2);
   },
 
   /**
@@ -176,7 +194,9 @@ const statsDataHandle = {
    */
   _computedAvgSignalLossPCT() {
     statsData.value.avgSignalLossPTC = (
-        (mockData.value.lossCount / mockData.value.count * 100).toFixed(2));
+      (mockData.value.lossCount / mockData.value.count) *
+      100
+    ).toFixed(2);
   },
 
   /**
@@ -185,19 +205,29 @@ const statsDataHandle = {
   _computedLossItemCountPCT() {
     statsData.value.lossItemCount = mockData.value.lossItemCount;
     statsData.value.lossItemCountPCT = (
-        (statsData.value.lossItemCount / conf.value.groupNum) *
-        100
+      (statsData.value.lossItemCount / conf.value.groupNum) *
+      100
     ).toFixed(2);
   },
 
   _computedAvgMaxDrawdownVal() {
-    statsData.value.avgMaxDrawdownVal = (mockData.value.maxDrawdownTotal / mockData.value.maxDrawdownsList.length).toFixed(2);
-    statsData.value.avgMaxDrawdownValPCT = ((Math.abs(statsData.value.avgMaxDrawdownVal) / conf.value.initCapital) * 100).toFixed(2);
+    statsData.value.avgMaxDrawdownVal = (
+      mockData.value.maxDrawdownTotal / mockData.value.maxDrawdownsList.length
+    ).toFixed(2);
+    statsData.value.avgMaxDrawdownValPCT = (
+      (Math.abs(statsData.value.avgMaxDrawdownVal) / conf.value.initCapital) *
+      100
+    ).toFixed(2);
   },
 
   _computedMidMaxDrawdownVal() {
-    statsData.value.midMaxDrawdownVal = arrUtil.getMidVal(mockData.value.maxDrawdownsList);
-    statsData.value.midMaxDrawdownPCT = ((Math.abs(statsData.value.midMaxDrawdownVal) / conf.value.initCapital) * 100).toFixed(2);
+    statsData.value.midMaxDrawdownVal = arrUtil.getMidVal(
+      mockData.value.maxDrawdownsList,
+    );
+    statsData.value.midMaxDrawdownPCT = (
+      (Math.abs(statsData.value.midMaxDrawdownVal) / conf.value.initCapital) *
+      100
+    ).toFixed(2);
   },
 
   setMaxContinuousLossVal(lossTotal) {
@@ -214,8 +244,8 @@ const statsDataHandle = {
     if (statsData.value.maxProfitVal < profit) {
       statsData.value.maxProfitVal = profit;
       statsData.value.maxProfitPCT = (
-          (statsData.value.maxProfitVal / conf.value.initCapital) *
-          100
+        (statsData.value.maxProfitVal / conf.value.initCapital) *
+        100
       ).toFixed(2);
     }
   },
@@ -226,13 +256,13 @@ const statsDataHandle = {
    */
   setMinProfit(profit) {
     if (
-        statsData.value.minProfitVal > profit ||
-        statsData.value.minProfitVal === 0
+      statsData.value.minProfitVal > profit ||
+      statsData.value.minProfitVal === 0
     ) {
       statsData.value.minProfitVal = profit;
       statsData.value.minProfitPCT = (
-          (statsData.value.minProfitVal / conf.value.initCapital) *
-          100
+        (statsData.value.minProfitVal / conf.value.initCapital) *
+        100
       ).toFixed(2);
     }
   },
@@ -249,24 +279,25 @@ const statsDataHandle = {
     this._computedMidProfit();
     this._computedAvgSignalLossPCT();
     this._computedRR();
-    this._computedLossItemCountPCT()
+    this._computedLossItemCountPCT();
     this._computedAvgMaxDrawdownVal();
     this._computedMidMaxDrawdownVal();
     this._computedAvgContinuousLossVal();
-  }
+  },
 };
 
-
 const createStats = (formData) => {
-  confHandle.changeConf(formData)
+  confHandle.changeConf(formData);
   _resetData();
 
   for (let i = 0; i < mockData.value.profitGroupList.length; i++) {
-    let {profitTotal, profitLine, prevMaxLossTotal} = _computedData(i);
+    let { profitTotal, profitLine, prevMaxLossTotal } = _computedData(i);
     mockData.value.profitGroupItemLine[i] = profitLine;
     mockData.value.allProfitTotal += profitTotal;
     // 初始资金 > 账户资金,亏损账户数 +1
-    conf.value.initCapital > profitTotal ? mockData.value.lossItemCount += 1 : "";
+    conf.value.initCapital > profitTotal
+      ? (mockData.value.lossItemCount += 1)
+      : "";
     // 存储每组的总收益，下标对应数据组下标
     mockData.value.profitGroupItemTotal[i] = profitTotal;
     _isRuined(profitTotal) === true ? statsDataHandle._computedRuin() : "";
@@ -274,7 +305,9 @@ const createStats = (formData) => {
     statsDataHandle.setMinProfit(profitTotal);
     // 统计样本数据总数
     mockData.value.count += mockData.value.profitGroupList[i].length;
-    mockData.value.maxDrawdownVal > prevMaxLossTotal ? mockData.value.maxDrawdownVal = prevMaxLossTotal : "";
+    mockData.value.maxDrawdownVal > prevMaxLossTotal
+      ? (mockData.value.maxDrawdownVal = prevMaxLossTotal)
+      : "";
   }
 
   statsDataHandle.setData();
@@ -285,7 +318,7 @@ const createStats = (formData) => {
  * @param {Number} profit 资金结果
  * @returns
  */
-const _isRuined = (profit) => (profit <= conf.value.ruinVal);
+const _isRuined = (profit) => profit <= conf.value.ruinVal;
 
 /**
  * 根据收益列表计算每组的最终资金，并计算历史最大/小亏损次数
@@ -306,7 +339,8 @@ const _computedData = (groupIndex) => {
       currMaxLossTotal += mockData.value.profitGroupList[groupIndex][i]; // 单次收益亏损，则加入当前亏损资金
       lossCounter += 1;
       mockData.value.lossCount += 1;
-      mockData.value.lossProfitTotal += mockData.value.profitGroupList[groupIndex][i];
+      mockData.value.lossProfitTotal +=
+        mockData.value.profitGroupList[groupIndex][i];
       statsDataHandle.setMaxContinuousLossVal(lossCounter);
       // 计算最大回撤
       if (currMaxLossTotal < prevMaxLossTotal) {
@@ -325,7 +359,8 @@ const _computedData = (groupIndex) => {
       // 策略盈利时，如果当前最大回撤幅度大于上一测统计的幅度，则写入新的最大回撤幅度，当前赋予上一次，当前重置
       currMaxLossTotal = 0;
       lossCounter = 0;
-      mockData.value.winProfitTotal += mockData.value.profitGroupList[groupIndex][i];
+      mockData.value.winProfitTotal +=
+        mockData.value.profitGroupList[groupIndex][i];
     }
   }
   // 循环结束后再判断一次，是否存在连败，防止数组末尾是连败，而忽略掉
@@ -333,13 +368,12 @@ const _computedData = (groupIndex) => {
     mockData.value.continuousLossTotal += lossCounter;
     mockData.value.continuousLossCount += 1;
   }
-  return {profitTotal, profitLine, prevMaxLossTotal};
+  return { profitTotal, profitLine, prevMaxLossTotal };
 };
 
-
 const createActData = (data) => {
-  actData.value = data
-}
+  actData.value = data;
+};
 /**
  * 重置数据
  */
@@ -348,8 +382,6 @@ const _resetData = () => {
   mockDataHandle.reset();
   mockDataHandle.createDataGroup();
 };
-
-
 </script>
 
 <style scoped>
