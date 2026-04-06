@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import {onMounted, onUnmounted, ref, watch} from "vue";
+import {onMounted, onUnmounted, ref, watch, defineEmits} from "vue";
 import * as echarts from "echarts/core";
 import {
   TitleComponent,
@@ -16,6 +16,7 @@ import {LineChart} from "echarts/charts";
 import {UniversalTransition} from "echarts/features";
 import {CanvasRenderer} from "echarts/renderers";
 import {DomObserver} from "@/utils/dom-observer.js";
+import {useActionStore} from "@/store/action.js";
 
 echarts.use([
   TitleComponent,
@@ -34,7 +35,8 @@ const props = defineProps({
     default: [],
   },
 });
-
+const emits = defineEmits({onExportPic: "onExportPic"})
+const actionStore = useActionStore();
 const chartDom = ref(null);
 let chart = null;
 let chartDomObserver = null;
@@ -42,6 +44,7 @@ let chartDomObserver = null;
 watch(
     () => props.profitGroupLine,
     (newVal) => {
+      console.log("当达到")
       let series = [];
       for (let i = 0; i < newVal.length; i++) {
         series.push({
@@ -60,6 +63,16 @@ watch(
       options & chart.setOption(options, true);
     },
 );
+
+watch(() => actionStore.saveChart, (val) => {
+  if (val === true) {
+    emits("onExportPic", chart.getDataURL({
+      type: "png",
+      pixelRatio: 1, //放大2倍
+      backgroundColor: "#fff",
+    }), "资金曲线图.png")
+  }
+})
 
 const options = {
   title: {
@@ -102,7 +115,6 @@ const intDomObserver = () => {
     });
   })
 }
-
 onMounted(() => {
   initChart()
   intDomObserver();
@@ -117,7 +129,6 @@ onUnmounted(() => {
 <style scoped>
 
 .scatter-chart-dom {
-  width: 100%;
   height: 500px;
 }
 </style>

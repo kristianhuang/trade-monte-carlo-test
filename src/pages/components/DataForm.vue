@@ -1,26 +1,26 @@
 <template>
   <n-form
-    ref="formRef"
-    :rules="formRules"
-    :model="formData"
-    inline
-    class="form-data"
+      ref="formRef"
+      :rules="formRules"
+      :model="formData"
+      inline
+      class="form-data"
   >
     <n-form-item label="初始资金" path="initCapital">
       <n-input-number
-        min="1"
-        v-model:value="formData.initCapital"
-        placeholder=""
-        :show-button="showBtn"
+          min="1"
+          v-model:value="formData.initCapital"
+          placeholder=""
+          :show-button="showBtn"
       />
     </n-form-item>
     <n-form-item label="样本组数量" path="groupNum">
       <n-input-number
-        min="1"
-        max="1000"
-        v-model:value="formData.groupNum"
-        placeholder=""
-        :show-button="showBtn"
+          min="1"
+          max="1000"
+          v-model:value="formData.groupNum"
+          placeholder=""
+          :show-button="showBtn"
       />
     </n-form-item>
     <!--    <n-form-item label="交易成本" path="tradeCost">-->
@@ -32,37 +32,45 @@
     <!--    </n-form-item>-->
     <n-form-item label="破产线" path="ruinThreshold">
       <n-input-number
-        min="0"
-        v-model:value="formData.ruinThreshold"
-        placeholder=""
-        :show-button="showBtn"
+          min="0"
+          v-model:value="formData.ruinThreshold"
+          placeholder=""
+          :show-button="showBtn"
       >
-        <template #suffix> % </template>
+        <template #suffix> %</template>
       </n-input-number>
     </n-form-item>
     <n-form-item>
-      <n-button @click="onSubmit" type="success" :loading="loading"
-        >创建数据</n-button
+      <n-button @click="onSubmit" type="success" :disabled="loading"
+      >创建数据
+      </n-button
       >
     </n-form-item>
     <n-form-item>
       <n-upload
-        :disabled="loading"
-        :custom-request="uploadRequest"
-        accept=".xlsx"
-        :show-file-list="false"
+          :disabled="loading"
+          :custom-request="uploadRequest"
+          accept=".xlsx"
+          :show-file-list="false"
       >
-        <n-button :loading="loading">上传数据</n-button>
+        <n-button :disabled="loading">上传数据</n-button>
       </n-upload>
+    </n-form-item>
+    <n-form-item>
+      <n-button @click="onSave" :disabled="loading"
+      >导出图片
+      </n-button
+      >
     </n-form-item>
   </n-form>
 </template>
 
 <script setup>
-import { NForm, NFormItem, NButton, NInputNumber, NUpload } from "naive-ui";
+import {NForm, NFormItem, NButton, NInputNumber, NUpload} from "naive-ui";
 
-import { ref, onMounted } from "vue";
+import {ref, onMounted} from "vue";
 import excel from "@/utils/excel.js";
+import {useActionStore} from "@/store/action.js";
 
 const emit = defineEmits({
   onSubmit: "onSubmit",
@@ -79,10 +87,7 @@ const props = defineProps({
   },
 });
 
-onMounted(() => {
-  formData.value = { ...defaultFormData, ...props.conf };
-});
-
+const actionStore = useActionStore();
 const formRef = ref(null);
 const showBtn = ref(false);
 const loading = ref(false);
@@ -121,6 +126,49 @@ const defaultFormData = {
 };
 
 const onSubmit = () => {
+  if (!checkActData()) {
+    return
+  }
+  formRef.value?.validate((err) => {
+    if (!err) {
+      window.$message.success("数据生成中...",{
+        onAfterLeave: () => {
+          loading.value = false;
+        },
+      } )
+      emit("onSubmit", formData.value);
+    }
+  });
+};
+
+const onSave = () => {
+  if (!checkActData()) {
+    return
+  }
+  actionStore.setSaveChart(true);
+  loading.value = false;
+}
+const uploadRequest = ({file, onFinish, onError, onProgress}) => {
+  loading.value = true;
+  excel
+      .reade(file.file)
+      .then((res) => {
+        emit("onUploadData", res);
+      })
+      .catch((err) => {
+        window.$message.error(err);
+      })
+      .finally(() => {
+        loading.value = false;
+      });
+  onFinish();
+};
+
+/**
+ * 判断是否已经上传真实数据，判断过程中将 loading 置为 true
+ * @returns {boolean} false 未上传，true 已上传
+ */
+const checkActData = () => {
   loading.value = true;
   if (props.hasActData === false) {
     window.$message.error("请上传真实数据", {
@@ -128,33 +176,14 @@ const onSubmit = () => {
         loading.value = false;
       },
     });
-    return;
+    return false;
   }
-  formRef.value?.validate((err) => {
-    if (!err) {
-      emit("onSubmit", formData.value);
-      setTimeout(() => {
-        loading.value = false;
-      }, 3000);
-    }
-  });
-};
+  return true;
+}
+onMounted(() => {
+  formData.value = {...defaultFormData, ...props.conf};
+});
 
-const uploadRequest = ({ file, onFinish, onError, onProgress }) => {
-  loading.value = true;
-  excel
-    .reade(file.file)
-    .then((res) => {
-      emit("onUploadData", res);
-    })
-    .catch((err) => {
-      window.$message.error(err);
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-  onFinish();
-};
 </script>
 
 <style scoped></style>
