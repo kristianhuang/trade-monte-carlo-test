@@ -24,7 +24,7 @@ onMounted(() => {
 const conf = ref({
   initCapital: 15000, // 初始金额
   ruinThreshold: 50, // 破产线，最终资金 < 初始资金的 {$ruinThreshold}%，则算作破产
-  groupNum: 3, // 数据样本组数量
+  groupNum: 10, // 数据样本组数量
   ruinVal: 0, // {$initCapital} *{$ruinThreshold}% = {$ruinVal}
   tradeCost: 0, // TODO 交易成本还没想好怎么计算
 });
@@ -353,4 +353,9 @@ const _resetData = () => {
 </script>
 
 <style scoped>
+.n-layout {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
 </style>

@@ -4,15 +4,15 @@
       <n-input-number min="1" v-model:value="formData.initCapital" placeholder="" :show-button="showBtn"/>
     </n-form-item>
     <n-form-item label="样本组数量" path="groupNum">
-      <n-input-number min="1" v-model:value="formData.groupNum" placeholder="" :show-button="showBtn"/>
+      <n-input-number min="1" max="1000" v-model:value="formData.groupNum" placeholder="" :show-button="showBtn"/>
     </n-form-item>
-    <n-form-item label="交易成本" path="tradeCost">
-      <n-input-number min="0" v-model:value="formData.tradeCost" placeholder="" :show-button="showBtn">
-        <template #suffix>
-          %
-        </template>
-      </n-input-number>
-    </n-form-item>
+    <!--    <n-form-item label="交易成本" path="tradeCost">-->
+    <!--      <n-input-number min="0" v-model:value="formData.tradeCost" placeholder="" :show-button="showBtn">-->
+    <!--        <template #suffix>-->
+    <!--          %-->
+    <!--        </template>-->
+    <!--      </n-input-number>-->
+    <!--    </n-form-item>-->
     <n-form-item label="破产线" path="ruinThreshold">
       <n-input-number min="0" v-model:value="formData.ruinThreshold" placeholder="" :show-button="showBtn">
         <template #suffix>
@@ -118,6 +118,9 @@ const uploadRequest = ({file, onFinish, onError, onProgress}) => {
   loading.value = true
   excel.reade(file.file).then((res) => {
     emit("onUploadData", res);
+  }).catch(err => {
+    window.$message.error(err)
+  }).finally(() => {
     loading.value = false;
   })
   onFinish()

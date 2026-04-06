@@ -26,7 +26,7 @@ let chart = null;
 let chartDomObserver = null;
 const options = {
   title: {
-    text: "收益散点图",
+    text: "资金散点图",
   },
   grid: {
     left: "3%",
