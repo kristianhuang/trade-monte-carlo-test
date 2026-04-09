@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import {defineEmits, onMounted, onUnmounted, ref, watch} from "vue";
+import {onMounted, onUnmounted, ref, watch} from "vue";
 import * as echarts from "echarts/core";
 import { GridComponent } from 'echarts/components';
 import { ScatterChart } from 'echarts/charts';

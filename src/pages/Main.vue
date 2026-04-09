@@ -3,6 +3,7 @@
     <DataForm
         :conf="conf"
         :has-act-data="hasActData"
+        :has-mock-data="hasMockData"
         @on-submit="createStats"
         @on-upload-data="createActData"
     />
@@ -12,7 +13,13 @@
         :init-capital="conf.initCapital"
     />
     <LineChart :profit-group-line="mockData.profitGroupItemLine" @on-export-pic="onExportPic"/>
-    <ScatterChart :profit-group-item-total="mockData.profitGroupItemTotal" @on-export-pic="onExportPic"/>
+    <ProfitDistributionChart :max-signal-loss-val="statsData.maxSignalLossVal"
+                             :max-signal-profit-val="statsData.maxSignalProfitVal"
+                             :profit-group-list="mockData.profitGroupList"
+                             :all-profit-total="mockData.allProfitTotal"
+                             @on-export-pic="onExportPic"
+    />
+    <!--    <ScatterChart :profit-group-item-total="mockData.profitGroupItemTotal" @on-export-pic="onExportPic"/>-->
   </n-layout>
 </template>
 
@@ -25,6 +32,7 @@ import DataTable from "./components/DataTable.vue";
 import {NLayout} from "naive-ui";
 import ScatterChart from "@/pages/components/ScatterChart.vue";
 import {useActionStore} from "@/store/action.js";
+import ProfitDistributionChart from "@/pages/components/ProfitDistributionChart.vue";
 
 
 const actionStore = useActionStore();
@@ -51,9 +59,13 @@ const confHandle = {
 };
 
 const actData = ref([]);
+const hasMockData = computed(() => {
+  return mockData.value.profitGroupItemLine.length > 0;
+});
+
 const hasActData = computed(() => {
   return actData.value.length > 0;
-});
+})
 
 const mockData = ref({
   profitGroupList: [], // 收益结果组
@@ -127,6 +139,8 @@ const statsData = ref({
   avgMaxDrawdownValPCT: 0, //平均最大回撤百分比
   midMaxDrawdownVal: 0, // 中位数最大回撤
   midMaxDrawdownPCT: 0, // 中位数最大回撤百分比
+  maxSignalProfitVal: 0, // 单次最大收益
+  maxSignalLossVal: 0, // 最次最大亏损
 });
 const statsDataHandle = {
   _computedRuin() {
@@ -267,6 +281,18 @@ const statsDataHandle = {
     }
   },
 
+  setMaxSignalProfitVal(val) {
+    if (val > statsData.value.maxSignalProfitVal) {
+      statsData.value.maxSignalProfitVal = val;
+    }
+  },
+
+  setMaxSignalLossVal(val) {
+    if (statsData.value.maxSignalLossVal > val) {
+      statsData.value.maxSignalLossVal = val;
+    }
+  },
+
   /**
    * 重置数据
    */
@@ -331,16 +357,18 @@ const _computedData = (groupIndex) => {
   let prevMaxLossTotal = 0;
   let currMaxLossTotal = 0;
   let profitLine = [];
+  let val = 0;
   for (let i = 0; i < mockData.value.profitGroupList[groupIndex].length; i++) {
-    profitTotal += mockData.value.profitGroupList[groupIndex][i];
+    val = mockData.value.profitGroupList[groupIndex][i];
+    profitTotal += val;
     profitLine.push(profitTotal);
     // 统计每个数据组的连续亏损、亏损次数，负数则亏损计数 +1，正数将亏损计数器传入连亏统计后清零
-    if (0 > mockData.value.profitGroupList[groupIndex][i]) {
-      currMaxLossTotal += mockData.value.profitGroupList[groupIndex][i]; // 单次收益亏损，则加入当前亏损资金
+    if (0 > val) {
+      statsDataHandle.setMaxSignalLossVal(val)
+      currMaxLossTotal += val; // 单次收益亏损，则加入当前亏损资金
       lossCounter += 1;
       mockData.value.lossCount += 1;
-      mockData.value.lossProfitTotal +=
-          mockData.value.profitGroupList[groupIndex][i];
+      mockData.value.lossProfitTotal += val;
       statsDataHandle.setMaxContinuousLossVal(lossCounter);
       // 计算最大回撤
       if (currMaxLossTotal < prevMaxLossTotal) {
@@ -351,6 +379,7 @@ const _computedData = (groupIndex) => {
         prevMaxLossTotal = currMaxLossTotal;
       }
     } else {
+      statsDataHandle.setMaxSignalProfitVal(val);
       // 清零连败前，先存入连败数组
       if (lossCounter > 1) {
         mockData.value.continuousLossTotal += lossCounter;
@@ -359,8 +388,7 @@ const _computedData = (groupIndex) => {
       // 策略盈利时，如果当前最大回撤幅度大于上一测统计的幅度，则写入新的最大回撤幅度，当前赋予上一次，当前重置
       currMaxLossTotal = 0;
       lossCounter = 0;
-      mockData.value.winProfitTotal +=
-          mockData.value.profitGroupList[groupIndex][i];
+      mockData.value.winProfitTotal += val;
     }
   }
   // 循环结束后再判断一次，是否存在连败，防止数组末尾是连败，而忽略掉

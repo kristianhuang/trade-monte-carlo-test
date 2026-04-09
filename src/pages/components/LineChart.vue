@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import {onMounted, onUnmounted, ref, watch, defineEmits} from "vue";
+import {onMounted, onUnmounted, ref, watch} from "vue";
 import * as echarts from "echarts/core";
 import {
   TitleComponent,
@@ -44,7 +44,6 @@ let chartDomObserver = null;
 watch(
     () => props.profitGroupLine,
     (newVal) => {
-      console.log("当达到")
       let series = [];
       for (let i = 0; i < newVal.length; i++) {
         series.push({

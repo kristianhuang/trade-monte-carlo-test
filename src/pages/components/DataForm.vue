@@ -17,7 +17,7 @@
     <n-form-item label="样本组数量" path="groupNum">
       <n-input-number
           min="1"
-          max="1000"
+          :max="maxGroupNum"
           v-model:value="formData.groupNum"
           placeholder=""
           :show-button="showBtn"
@@ -67,7 +67,6 @@
 
 <script setup>
 import {NForm, NFormItem, NButton, NInputNumber, NUpload} from "naive-ui";
-
 import {ref, onMounted} from "vue";
 import excel from "@/utils/excel.js";
 import {useActionStore} from "@/store/action.js";
@@ -85,12 +84,18 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+
+  hasMockData:{
+    type: Boolean,
+    required: false,
+  }
 });
 
 const actionStore = useActionStore();
 const formRef = ref(null);
 const showBtn = ref(false);
 const loading = ref(false);
+const maxGroupNum = ref(300);
 const formData = ref({});
 const formRules = {
   initCapital: {
@@ -131,36 +136,43 @@ const onSubmit = () => {
   }
   formRef.value?.validate((err) => {
     if (!err) {
-      window.$message.success("数据生成中...",{
+      window.$message.loading("数据生成中...", {
         onAfterLeave: () => {
           loading.value = false;
         },
-      } )
+      })
       emit("onSubmit", formData.value);
     }
   });
 };
 
 const onSave = () => {
-  if (!checkActData()) {
+  if (!checkMockData()) {
     return
   }
   actionStore.setSaveChart(true);
   loading.value = false;
 }
+
 const uploadRequest = ({file, onFinish, onError, onProgress}) => {
   loading.value = true;
   excel
       .reade(file.file)
       .then((res) => {
         emit("onUploadData", res);
+        window.$message.loading("数据上传中...",{
+          onAfterLeave: () => {
+            loading.value = false;
+          },
+        })
       })
       .catch((err) => {
-        window.$message.error(err);
+        window.$message.error(err, {
+          onAfterLeave: () => {
+            loading.value = false;
+          },
+        });
       })
-      .finally(() => {
-        loading.value = false;
-      });
   onFinish();
 };
 
@@ -180,6 +192,20 @@ const checkActData = () => {
   }
   return true;
 }
+
+const checkMockData = () => {
+  loading.value = true;
+  if (props.hasMockData === false) {
+    window.$message.error("请先创建数据", {
+      onAfterLeave: () => {
+        loading.value = false;
+      },
+    });
+    return false;
+  }
+  return true;
+}
+
 onMounted(() => {
   formData.value = {...defaultFormData, ...props.conf};
 });
